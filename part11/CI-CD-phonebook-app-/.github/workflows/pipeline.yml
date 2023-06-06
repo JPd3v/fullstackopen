@@ -1,0 +1,45 @@
+name: ci pipeline 
+
+on:
+  push:
+    branches:
+      - main
+  pull_request: 
+    branches: [main] 
+    types: [opened, synchronize]
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - name: install dependencies
+        run: npm install
+      - name: runs linter
+        run: npm run lint
+      - name: build client
+        run: npm run build
+      - name: pipeline Success
+        uses: rjstone/discord-webhook-notify@v1
+        if: success()
+        with:
+          severity: info
+          details: pipeline Succeeded!
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: pipeline Failure
+        uses: rjstone/discord-webhook-notify@v1
+        if: failure()
+        with:
+          severity: error
+          details: pipeline Failed!
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: pipeline Cancelled
+        uses: rjstone/discord-webhook-notify@v1
+        if: cancelled()
+        with:
+          severity: warn
+          details: pipeline Cancelled!
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
